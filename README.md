@@ -29,7 +29,7 @@ const { createEventStream } = require("http-event-stream")
 const app = express()
 
 // Example event stream: Stream the current time
-app.get('/time-stream', (req, res) => {
+app.get("/time-stream", (req, res) => {
   let interval
 
   const stream = createEventStream(res, {
@@ -61,7 +61,7 @@ const app = new Koa()
 const router = new Router()
 
 // Example event stream: Stream the current time
-router.get('/time-stream', (context) => {
+router.get("/time-stream", (context) => {
   let interval
 
   const stream = createEventStream(context.res, {
@@ -85,6 +85,43 @@ app
   .use(router.routes())
   .use(router.allowedMethods())
   .listen(3000)
+```
+
+## Event replaying: Using `Last-Event-ID`
+
+```js
+let nextEventID = 1
+const recentEvents = []
+
+app.get("/stream/random-numbers", (req, res) => {
+  let interval
+
+  const stream = createEventStream(res, {
+    onClose: () => clearInterval(interval)
+  })
+
+  if (req.get("Last-Event-ID")) {
+    // Client wants to catch up with the events that happened since they subscribed previously
+    const lastEventIndex = recentEvents.findIndex(event => event.id === req.get("Last-Event-ID"))
+    const eventsToCatchUp = lastEventIndex === -1 ? [] : recentEvents.slice(lastEventIndex + 1)
+
+    for (const event of eventsToCatchUp) {
+      stream.sendMessage(event)
+    }
+  }
+
+  interval = setInterval(() => {
+    const event = {
+      id: String(nextEventID++),
+      event: "time",
+      data: Math.random()
+    }
+
+    stream.sendMessage(event)
+    recentEvents.push(event)
+  }, 1000)
+})
+
 ```
 
 
