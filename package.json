@@ -15,6 +15,7 @@
     "express",
     "http",
     "koa",
+    "rest",
     "server",
     "sse",
     "stream"

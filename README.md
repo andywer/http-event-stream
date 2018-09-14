@@ -1,8 +1,14 @@
 # http-event-stream
 
-Create plain HTTP event streams using Server Sent Events (SSE) in node.js. Stream push notifications to the client without web socket.
+Create plain HTTP event streams using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js. Stream push notifications to the client without web socket.
 
 Framework-agnostic, works with Express, Koa and probably many more. Check out [Difference to WebSockets](#difference-to-websockets) below.
+
+⬇ Realtime events over plain HTTP<br />
+📡 Serve as a REST endpoint route<br />
+⏲ Periodic keep-alive messages<br />
+☁️ Stateless by design<br />
+👌 Simple unopinionated API<br />
 
 
 ## Installation
@@ -103,6 +109,18 @@ Server Sent Events (SSE) only do this one job, but do it really well. It's a sim
 You can pass parameters and headers from the client to the server when opening the stream, but the actual stream is read-only for the client.
 
 It might sound like a strong limitation first, but actually it's a pretty clean approach: It makes the stream stateless and allows cool things like [combining multiple streams into one](https://github.com/Netflix/Turbine) which you could not easily do with a duplex stream.
+
+
+## Authentication
+
+Since it's all just plain HTTP, we can use headers like we always do. Go ahead and use your favorite auth middleware that you use for the other REST endpoints.
+
+
+## Browser support
+
+Make sure to include a polyfill in your client-side code, since [not all major browsers provide native support for SSE](https://caniuse.com/#search=server%20sent%20events).
+
+Try [`event-source-polyfill`](https://www.npmjs.com/package/event-source-polyfill).
 
 
 ## Further reading
