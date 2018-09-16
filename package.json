@@ -1,6 +1,6 @@
 {
   "name": "http-event-stream",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Create plain HTTP event streams using Server Sent Events (SSE).",
   "author": "Andy Wermke (https://github.com/andywer)",
