@@ -153,11 +153,13 @@ It might sound like a strong limitation first, but actually it's a pretty clean 
 Since it's all just plain HTTP, we can use headers like we always do. Go ahead and use your favorite auth middleware that you use for the other REST endpoints.
 
 
-## Browser support
+## Client
 
-Make sure to include a polyfill in your client-side code, since [not all major browsers provide native support for SSE](https://caniuse.com/#search=server%20sent%20events).
+Make sure to include a polyfill in your web page code, since [not all major browsers provide native support for SSE](https://caniuse.com/#search=server%20sent%20events).
 
 Try [`event-source-polyfill`](https://www.npmjs.com/package/event-source-polyfill).
+
+To connect to SSE streams from node.js, use the [`eventsource` package](https://www.npmjs.com/package/eventsource).
 
 
 ## Further reading
