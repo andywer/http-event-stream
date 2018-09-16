@@ -32,9 +32,15 @@ export function createEventStream (res: ServerResponse, options: EventStreamOpti
       const lines: string[] = []
       const data = Array.isArray(event.data) ? event.data : [event.data]
 
-      if (event.event) lines.push(`event:${event.event}`)
-      if (event.id) lines.push(`id:${event.id}`)
-      if (event.retry) lines.push(`retry:${event.retry}`)
+      if (event.event) {
+        lines.push(`event:${event.event}`)
+      }
+      if (event.id) {
+        lines.push(`id:${event.id}`)
+      }
+      if (event.retry) {
+        lines.push(`retry:${event.retry}`)
+      }
 
       for (const dataItem of data) {
         for (const dataItemLine of dataItem.replace(/(\r\n|\r)/g, '\n').split('\n')) {
