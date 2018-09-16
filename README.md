@@ -1,8 +1,8 @@
-# http-event-stream
+# http-event-stream [![Build Status](https://travis-ci.org/andywer/http-event-stream.svg?branch=master)](https://travis-ci.org/andywer/http-event-stream) [![NPM Version](https://img.shields.io/npm/v/http-event-stream.svg)](https://www.npmjs.com/package/http-event-stream)
 
-Create plain HTTP event streams using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js. Stream push notifications to the client without web socket.
+Create plain HTTP event streams using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js. Stream push notifications to the client without WebSockets.
 
-Framework-agnostic, works with Express, Koa and probably many more. Check out [Difference to WebSockets](#difference-to-websockets) below.
+Framework-agnostic: Works with Express, Koa and probably many more. Check out [Difference to WebSockets](#difference-to-websockets) below.
 
 ⬇ Realtime events over plain HTTP<br />
 📡 Serve as a REST endpoint route<br />
@@ -87,7 +87,7 @@ app
   .listen(3000)
 ```
 
-## Event replaying: Using `Last-Event-ID`
+## Replaying events: Using `Last-Event-ID`
 
 ```js
 let nextEventID = 1
