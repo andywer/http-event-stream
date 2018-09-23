@@ -87,39 +87,39 @@ app
   .listen(3000)
 ```
 
-## Replaying events: Using `Last-Event-ID`
+## Replaying events: `Last-Event-ID`
 
 ```js
-let nextEventID = 1
-const recentEvents = []
+const express = require("express")
+const { createEventStream } = require("http-event-stream")
+const { queryEvents, subscribeToEvents } = require("./models/events")
 
-app.get("/stream/random-numbers", (req, res) => {
-  let interval
+const app = express()
 
+app.get("/stream/events", (req, res, next) => {
+  let unsubscribe = null
+  
   const stream = createEventStream(res, {
-    onClose: () => clearInterval(interval)
+    onClose () {
+      if (unsubscribe) unsubscribe()
+    }
   })
 
   if (req.get("Last-Event-ID")) {
-    // Client wants to catch up with the events that happened since they subscribed previously
-    const lastEventIndex = recentEvents.findIndex(event => event.id === req.get("Last-Event-ID"))
-    const eventsToCatchUp = lastEventIndex === -1 ? [] : recentEvents.slice(lastEventIndex + 1)
-
-    for (const event of eventsToCatchUp) {
-      stream.sendMessage(event)
-    }
+    // Client wants to catch up after re-connect
+    queryEvents({ offset: req.get("Last-Event-ID") })
+      .then(eventsToCatchUp => {
+        eventsToCatchUp.forEach(event => stream.sendMessage(event))
+        next()
+      })
+      .catch(error => {
+        next(error)
+      })
   }
-
-  interval = setInterval(() => {
-    const event = {
-      id: String(nextEventID++),
-      event: "time",
-      data: Math.random()
-    }
-
+  
+  unsubscribe = subscribeToEvents(event => {
     stream.sendMessage(event)
-    recentEvents.push(event)
-  }, 1000)
+  })
 })
 
 ```
