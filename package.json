@@ -31,6 +31,9 @@
     "tslint-config-prettier": "^1.15.0",
     "typescript": "^3.0.3"
   },
+  "files": [
+    "dist/**"
+  ],
   "prettier": {
     "semi": false,
     "printWidth": 100
