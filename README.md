@@ -6,7 +6,6 @@ Framework-agnostic: Works with Express, Koa and probably many more. Check out [D
 
 ⬇ Realtime events over plain HTTP<br />
 📡 Serve as a REST endpoint route<br />
-⏲ Periodic keep-alive messages<br />
 ☁️ Stateless by design<br />
 👌 Simple unopinionated API<br />
 
