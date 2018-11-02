@@ -27,10 +27,18 @@ export function createEventStream (res: ServerResponse, options: EventStreamOpti
     throw new Error('Cannot create SSE event stream: Headers have already been sent to client.')
   }
 
+  // Chrome chokes upon double-newline separated comment blocks without data,
+  // so make sure we always make comments part of a data message block
+  let stillInCommentBlock = false
+
   const stream = {
     sendMessage (event: ServerSentEvent) {
       const lines: string[] = []
       const data = Array.isArray(event.data) ? event.data : [event.data]
+
+      if (stillInCommentBlock) {
+        lines.push('')
+      }
 
       if (event.event) {
         lines.push(`event:${event.event}`)
@@ -49,9 +57,11 @@ export function createEventStream (res: ServerResponse, options: EventStreamOpti
       }
 
       res.write(lines.join('\n') + '\n\n')
+      stillInCommentBlock = false
     },
     sendComment (comment: string) {
-      res.write(':' + comment + '\n\n')
+      res.write(':' + comment + '\n')
+      stillInCommentBlock = true
     },
     close () {
       res.end()
@@ -64,7 +74,7 @@ export function createEventStream (res: ServerResponse, options: EventStreamOpti
 }
 
 function initStream (stream: EventStream, res: ServerResponse, options: EventStreamOptions) {
-  const { keepAliveInterval = 10000 } = options
+  const { keepAliveInterval = 20000 } = options
 
   if (keepAliveInterval > 0) {
     const keepAliveIntervalID = setInterval(() => {
