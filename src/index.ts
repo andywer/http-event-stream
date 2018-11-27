@@ -1,106 +1,74 @@
-import { ServerResponse } from 'http'
+import { ServerRequest, ServerResponse } from 'http'
+import { createLowLevelStream } from './stream'
+import { ServerSentEvent } from './types'
 
-// see <https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Fields>
-export interface ServerSentEvent {
-  data: string | string[]
-  event?: string,
-  id?: string
-  retry?: number
-}
+export { ServerSentEvent }
 
 export interface EventStream {
   close (): void
-  sendComment (comment: string): void
-  sendMessage (event: ServerSentEvent): void
 }
+
+export interface StreamContext {
+  close (): void
+  sendComment (comment: string): void,
+  sendEvent (event: ServerSentEvent): void
+}
+
+export type UnsubscribeFn = () => void
 
 export interface EventStreamOptions {
   /** How often to send a keep-alive comment. In milleseconds. */
   keepAliveInterval?: number,
 
-  /** Callback to be called when the stream is closed by either party. */
-  onClose?: (hadNetworkError: boolean) => void
+  fetch (lastEventId: string): Promise<ServerSentEvent[]>,
+  stream (context: StreamContext): UnsubscribeFn,
+
+  onError? (error: Error): void
 }
 
-export function createEventStream (res: ServerResponse, options: EventStreamOptions = {}): EventStream {
-  if (res.headersSent) {
-    throw new Error('Cannot create SSE event stream: Headers have already been sent to client.')
-  }
+const defaultErrorHandler = (error: Error) => {
+  // tslint:disable-next-line
+  console.error(`Server Sent Event stream errored: ${error}`)
+}
 
-  // Chrome chokes upon double-newline separated comment blocks without data,
-  // so make sure we always make comments part of a data message block
-  let stillInCommentBlock = false
+export async function streamEvents (req: ServerRequest, res: ServerResponse, options: EventStreamOptions): Promise<EventStream> {
+  const { fetch, stream, onError = defaultErrorHandler } = options
 
-  const stream = {
-    sendMessage (event: ServerSentEvent) {
-      const lines: string[] = []
-      const data = Array.isArray(event.data) ? event.data : [event.data]
-
-      if (stillInCommentBlock) {
-        lines.push('')
-      }
-
-      if (event.event) {
-        lines.push(`event:${event.event}`)
-      }
-      if (event.id) {
-        lines.push(`id:${event.id}`)
-      }
-      if (event.retry) {
-        lines.push(`retry:${event.retry}`)
-      }
-
-      for (const dataItem of data) {
-        for (const dataItemLine of dataItem.replace(/(\r\n|\r)/g, '\n').split('\n')) {
-          lines.push(`data:${dataItemLine}`)
-        }
-      }
-
-      res.write(lines.join('\n') + '\n\n')
-      stillInCommentBlock = false
-    },
-    sendComment (comment: string) {
-      res.write(':' + comment + '\n')
-      stillInCommentBlock = true
-    },
-    close () {
-      res.end()
+  const handleConnectionClose = () => {
+    try {
+      unsubscribeFromStream()
+    } catch (error) {
+      onError(error)
     }
   }
 
-  initStream(stream, res, options)
+  const initiallyFetchedEvents = req.headers['last-event-id']
+    ? await fetch(req.headers['last-event-id'] as string)
+    : []
 
-  return stream
-}
+  const autoCloseFast = Boolean(req.headers.accept && !req.headers.accept.match(/\btext\/event-stream\b/))
 
-function initStream (stream: EventStream, res: ServerResponse, options: EventStreamOptions) {
-  const { keepAliveInterval = 20000 } = options
-
-  if (keepAliveInterval > 0) {
-    const keepAliveIntervalID = setInterval(() => {
-      stream.sendComment('keep-alive')
-    }, keepAliveInterval)
-
-    res.on('close', () => {
-      clearInterval(keepAliveIntervalID)
-    })
-    res.on('finish', () => {
-      clearInterval(keepAliveIntervalID)
-    })
-  }
-
-  if (options.onClose) {
-    res.connection.on('close', options.onClose)
-  }
-
-  res.connection.setNoDelay(true)
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache, no-transform',
-    'Connection': 'keep-alive'
+  const lowLevelStream = createLowLevelStream(res, {
+    autoCloseFast,
+    keepAliveInterval: options.keepAliveInterval,
+    onClose: handleConnectionClose
   })
 
-  stream.sendComment('ok')
+  const streamContext: StreamContext = {
+    close: lowLevelStream.close,
+    sendComment: lowLevelStream.sendComment,
+    sendEvent: lowLevelStream.sendMessage
+  }
 
-  return stream
+  const unsubscribeFromStream = stream(streamContext)
+
+  for (const initiallyFetchedEvent of initiallyFetchedEvents) {
+    streamContext.sendEvent(initiallyFetchedEvent)
+  }
+
+  return {
+    close () {
+      streamContext.close()
+    }
+  }
 }
