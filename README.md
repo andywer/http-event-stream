@@ -2,12 +2,12 @@
 
 Create plain HTTP event streams using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js. Stream push notifications to the client without WebSockets.
 
-Framework-agnostic: Works with Express, Koa and probably many more. Check out [Difference to WebSockets](#difference-to-websockets) below.
+Framework-agnostic: Works with Express, Koa and probably many more. Check out [Differences to WebSockets](#differences-to-websockets) below.
 
-⬇ Realtime events over plain HTTP<br />
-📡 Serve as a REST endpoint route<br />
-☁️ Stateless by design<br />
-👌 Simple unopinionated API<br />
+📡&nbsp;&nbsp;Realtime events over plain HTTP<br />
+💡&nbsp;&nbsp;Serve as a REST endpoint route<br />
+☁️&nbsp;&nbsp;Stateless by design<br />
+👌&nbsp;&nbsp;Simple unopinionated API<br />
 
 
 ## Installation
@@ -19,37 +19,25 @@ yarn add http-event-stream
 ```
 
 
-## Usage ([Express.js](https://expressjs.com/))
+## Usage
+
+### Using [Express.js](https://expressjs.com/)
 
 ```js
 const express = require("express")
-const { createEventStream } = require("http-event-stream")
+const { streamEvents } = require("http-event-stream")
 
 const app = express()
 
 // Example event stream: Stream the current time
 app.get("/time-stream", (req, res) => {
-  let interval
-
-  const stream = createEventStream(res, {
-    onClose: () => clearInterval(interval)
-  })
-
-  interval = setInterval(() => {
-    stream.sendMessage({
-      event: "time",
-      data: {
-        now: new Date().toISOString()
-      }
-    })
-  }, 1000)
+  streamSampleEvents(req, res)
 })
 
 app.listen(3000)
 ```
 
-
-## Usage ([Koa.js](https://koajs.com/))
+### Using [Koa.js](https://koajs.com/)
 
 ```js
 const Koa = require("koa")
@@ -61,20 +49,7 @@ const router = new Router()
 
 // Example event stream: Stream the current time
 router.get("/time-stream", (context) => {
-  let interval
-
-  const stream = createEventStream(context.res, {
-    onClose: () => clearInterval(interval)
-  })
-
-  interval = setInterval(() => {
-    stream.sendMessage({
-      event: "time",
-      data: {
-        now: new Date().toISOString()
-      }
-    })
-  }, 1000)
+  streamSampleEvents(req, res)
 
   // Don't close the request/stream after handling the route!
   context.respond = false
@@ -86,42 +61,49 @@ app
   .listen(3000)
 ```
 
-## Replaying events: `Last-Event-ID`
+### Sample stream implementation
 
 ```js
-const express = require("express")
-const { createEventStream } = require("http-event-stream")
-const { queryEvents, subscribeToEvents } = require("./models/events")
+function streamSampleEvents (req, res) {
+  const fetchEventsSince = async (lastEventId) => {
+    return [ /* all events since event with ID `lastEventId` woud go here */ ]
+  }
+  return streamEvents(req, res, {
+    async fetch (lastEventId) {
+      // This method is mandatory to replay missed events after a re-connect
+      return fetchEventsSince(lastEventId)
+    },
+    stream (streamContext) {
+      // Sample events: Send an event every second
+      const interval = setInterval(() => {
+        streamContext.sendEvent({
+          event: "time",
+          data: {
+            now: new Date().toISOString()
+          }
+        })
+      }, 1000)
 
-const app = express()
-
-app.get("/stream/events", (req, res, next) => {
-  let unsubscribe = null
-  
-  const stream = createEventStream(res, {
-    onClose () {
-      if (unsubscribe) unsubscribe()
+      // Return stream-closing function
+      const unsubscribe = () => clearInterval(interval)
+      return unsubscribe
     }
   })
-
-  if (req.get("Last-Event-ID")) {
-    // Client wants to catch up after re-connect
-    queryEvents({ offset: req.get("Last-Event-ID") })
-      .then(eventsToCatchUp => {
-        eventsToCatchUp.forEach(event => stream.sendMessage(event))
-        next()
-      })
-      .catch(error => {
-        next(error)
-      })
-  }
-  
-  unsubscribe = subscribeToEvents(event => {
-    stream.sendMessage(event)
-  })
-})
-
+}
 ```
+
+A server-sent event sent via `streamContext.sendEvent()` or returned from `fetch()` has to have the following shape:
+
+```ts
+interface ServerSentEvent {
+  data: string | string[]
+  event?: string,
+  id?: string
+  retry?: number
+}
+```
+
+See [Using server-sent events - Fields](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Fields).
 
 
 ## API
@@ -129,7 +111,7 @@ app.get("/stream/events", (req, res, next) => {
 See [dist/index.d.ts](./dist/index.d.ts).
 
 
-## Difference to WebSockets
+## Differences to WebSockets
 
 Brief summary:
 
