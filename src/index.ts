@@ -1,4 +1,4 @@
-import { ServerRequest, ServerResponse } from 'http'
+import { IncomingMessage, ServerResponse } from 'http'
 import { createLowLevelStream } from './stream'
 import { ServerSentEvent } from './types'
 
@@ -31,7 +31,7 @@ const defaultErrorHandler = (error: Error) => {
   console.error(`Server Sent Event stream errored: ${error}`)
 }
 
-export async function streamEvents (req: ServerRequest, res: ServerResponse, options: EventStreamOptions): Promise<EventStream> {
+export async function streamEvents (req: IncomingMessage, res: ServerResponse, options: EventStreamOptions): Promise<EventStream> {
   const { fetch, stream, onError = defaultErrorHandler } = options
 
   const handleConnectionClose = () => {

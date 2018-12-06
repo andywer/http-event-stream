@@ -13,7 +13,7 @@ import {
 const eventIntervalMs = 40
 let nextEventId = 1
 
-async function streamTestEvents (req: http.ServerRequest, res: http.ServerResponse) {
+async function streamTestEvents (req: http.IncomingMessage, res: http.ServerResponse) {
   await streamEvents(req, res, {
     async fetch (lastEventId: string) {
       return retrieveTestEventsSinceId(lastEventId).map(serializeEvent)
