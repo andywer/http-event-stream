@@ -1,20 +1,21 @@
 /// <reference types="node" />
-import { ServerResponse } from 'http';
-export interface ServerSentEvent {
-    data: string | string[];
-    event?: string;
-    id?: string;
-    retry?: number;
-}
+import { IncomingMessage, ServerResponse } from 'http';
+import { ServerSentEvent } from './types';
+export { ServerSentEvent };
 export interface EventStream {
     close(): void;
-    sendComment(comment: string): void;
-    sendMessage(event: ServerSentEvent): void;
 }
+export interface StreamContext {
+    close(): void;
+    sendComment(comment: string): void;
+    sendEvent(event: ServerSentEvent): void;
+}
+export declare type UnsubscribeFn = () => void;
 export interface EventStreamOptions {
     /** How often to send a keep-alive comment. In milleseconds. */
     keepAliveInterval?: number;
-    /** Callback to be called when the stream is closed by either party. */
-    onClose?: (hadNetworkError: boolean) => void;
+    fetch(lastEventId: string): Promise<ServerSentEvent[]>;
+    stream(context: StreamContext): UnsubscribeFn;
+    onError?(error: Error): void;
 }
-export declare function createEventStream(res: ServerResponse, options?: EventStreamOptions): EventStream;
+export declare function streamEvents(req: IncomingMessage, res: ServerResponse, options: EventStreamOptions): Promise<EventStream>;
