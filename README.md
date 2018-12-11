@@ -2,12 +2,14 @@
 
 Create plain HTTP event streams using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js. Stream push notifications to the client without WebSockets.
 
-Framework-agnostic: Works with Express, Koa and probably many more. Check out [Differences to WebSockets](#differences-to-websockets) below.
+The main difference to other packages is that we focus on creating spec-compliant Server Sent Event streams: Not only streaming events, but also replaying past events on demand.
+
+That event replaying is part of the SSE specification and allows clients to reconnect a broken stream without missing any data. That functionality is also mandatory to make browser polyfills work.
 
 📡&nbsp;&nbsp;Realtime events over plain HTTP<br />
 💡&nbsp;&nbsp;Serve as a REST endpoint route<br />
 ☁️&nbsp;&nbsp;Stateless by design<br />
-👌&nbsp;&nbsp;Simple unopinionated API<br />
+⚙️&nbsp;&nbsp;Framework-agnostic - works with Express, Koa & others<br />
 
 
 ## Installation
@@ -64,6 +66,8 @@ app
 ### Sample stream implementation
 
 ```js
+import events from "./some-event-emitter"
+
 function streamSampleEvents (req, res) {
   const fetchEventsSince = async (lastEventId) => {
     return [ /* all events since event with ID `lastEventId` woud go here */ ]
@@ -74,18 +78,20 @@ function streamSampleEvents (req, res) {
       return fetchEventsSince(lastEventId)
     },
     stream (streamContext) {
-      // Sample events: Send an event every second
-      const interval = setInterval(() => {
+      const listener = () => {
         streamContext.sendEvent({
           event: "time",
           data: {
             now: new Date().toISOString()
           }
         })
-      }, 1000)
+      }
 
-      // Return stream-closing function
-      const unsubscribe = () => clearInterval(interval)
+      // Subscribe to some sample event emitter
+      events.addEventListener("data", listener)
+
+      // Return function to unsubscribe from updates
+      const unsubscribe = () => events.removeEventListener("data", listener)
       return unsubscribe
     }
   })
