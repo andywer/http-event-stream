@@ -1,16 +1,16 @@
 # http-event-stream [![Build Status](https://travis-ci.org/andywer/http-event-stream.svg?branch=master)](https://travis-ci.org/andywer/http-event-stream) [![NPM Version](https://img.shields.io/npm/v/http-event-stream.svg)](https://www.npmjs.com/package/http-event-stream)
 
-Create plain HTTP event streams using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js. Stream push notifications to the client without WebSockets.
+Stream real-time events over plain HTTP using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js.
 
-The main difference to other packages is that we focus on creating spec-compliant Server Sent Event streams: Not only streaming events, but also replaying past events on demand.
+Focusing on spec-compliant Server Sent Event streams, we not only stream events, but also replay past events on demand. Event replaying is part of the SSE specification and allows clients to reconnect to a stream without missing any data.
 
-That event replaying is part of the SSE specification and allows clients to reconnect a broken stream without missing any data. That functionality is also mandatory to make browser polyfills work.
+📡&nbsp;&nbsp;Server-sent events via plain HTTP<br />
+💡&nbsp;&nbsp;Stream as a REST endpoint route<br />
+☁️&nbsp;&nbsp;Immutable state allows cleaner code<br />
+🗺️&nbsp;&nbsp;Framework-agnostic - works with Express, Koa & others<br />
+🛡️&nbsp;&nbsp;No more "Failed to upgrade websocket connection"<br />
 
-📡&nbsp;&nbsp;Realtime events over plain HTTP<br />
-💡&nbsp;&nbsp;Serve as a REST endpoint route<br />
-☁️&nbsp;&nbsp;Stateless by design<br />
-⚙️&nbsp;&nbsp;Framework-agnostic - works with Express, Koa & others<br />
-
+---
 
 ## Installation
 
