@@ -51,7 +51,7 @@ const router = new Router()
 // Example event stream: Stream the current time
 router.get("/time-stream", (context) => {
   // Find the implementation below
-  streamSampleEvents(req, res)
+  streamSampleEvents(context.req, context.res)
 
   // Koa quirk: Don't close the request/stream after handling the route!
   context.respond = false
