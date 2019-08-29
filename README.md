@@ -27,12 +27,12 @@ yarn add http-event-stream
 
 ```js
 const express = require("express")
-const { streamEvents } = require("http-event-stream")
 
 const app = express()
 
 // Example event stream: Stream the current time
 app.get("/time-stream", (req, res) => {
+  // Find the implementation below
   streamSampleEvents(req, res)
 })
 
@@ -44,16 +44,16 @@ app.listen(3000)
 ```js
 const Koa = require("koa")
 const Router = require("koa-router")
-const { createEventStream } = require("http-event-stream")
 
 const app = new Koa()
 const router = new Router()
 
 // Example event stream: Stream the current time
 router.get("/time-stream", (context) => {
+  // Find the implementation below
   streamSampleEvents(req, res)
 
-  // Don't close the request/stream after handling the route!
+  // Koa quirk: Don't close the request/stream after handling the route!
   context.respond = false
 })
 
@@ -66,7 +66,8 @@ app
 ### Sample stream implementation
 
 ```js
-import events from "./some-event-emitter"
+const { streamEvents } = require("http-event-stream")
+const events = require("./some-event-emitter")
 
 function streamSampleEvents (req, res) {
   const fetchEventsSince = async (lastEventId) => {
@@ -77,9 +78,9 @@ function streamSampleEvents (req, res) {
       // This method is mandatory to replay missed events after a re-connect
       return fetchEventsSince(lastEventId)
     },
-    stream (streamContext) {
+    stream (stream) {
       const listener = () => {
-        streamContext.sendEvent({
+        stream.sendEvent({
           event: "time",
           data: {
             now: new Date().toISOString()
@@ -90,7 +91,7 @@ function streamSampleEvents (req, res) {
       // Subscribe to some sample event emitter
       events.addEventListener("data", listener)
 
-      // Return function to unsubscribe from updates
+      // Return an unsubscribe function, so the stream can be terminated properly
       const unsubscribe = () => events.removeEventListener("data", listener)
       return unsubscribe
     }
@@ -98,7 +99,7 @@ function streamSampleEvents (req, res) {
 }
 ```
 
-A server-sent event sent via `streamContext.sendEvent()` or returned from `fetch()` has to have the following shape:
+A server-sent event sent via `stream.sendEvent()` or returned from `fetch()` has to have the following shape:
 
 ```ts
 interface ServerSentEvent {
@@ -108,6 +109,8 @@ interface ServerSentEvent {
   retry?: number
 }
 ```
+
+Besides `stream.sendEvent(event: ServerSentEvent)` there is also `stream.sendComment(comment: string)` and `stream.close()`.
 
 See [Using server-sent events - Fields](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Fields).
 
