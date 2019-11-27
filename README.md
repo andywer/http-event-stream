@@ -2,7 +2,7 @@
 
 Stream real-time events over plain HTTP using [Server Sent Events (SSE)](https://en.wikipedia.org/wiki/Server-sent_events) in node.js.
 
-Focusing on spec-compliant Server Sent Event streams, we not only stream events, but also replay past events on demand. Event replaying is part of the SSE specification and allows clients to reconnect to a stream without missing any data.
+Focusing on spec-compliant Server Sent Event streams, we not only stream events, but also replay past events on demand. Event replaying allows clients to disconnect and reconnect to a stream without missing any data.
 
 📡&nbsp;&nbsp;**Server-sent events via plain HTTP**<br />
 💡&nbsp;&nbsp;**Stream as a REST endpoint route**<br />
