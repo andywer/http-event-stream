@@ -82,9 +82,9 @@ function streamSampleEvents (req, res) {
       const listener = () => {
         stream.sendEvent({
           event: "time",
-          data: {
+          data: JSON.stringify({
             now: new Date().toISOString()
-          }
+          })
         })
       }
 
