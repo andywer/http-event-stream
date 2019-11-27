@@ -4,11 +4,11 @@ Stream real-time events over plain HTTP using [Server Sent Events (SSE)](https:/
 
 Focusing on spec-compliant Server Sent Event streams, we not only stream events, but also replay past events on demand. Event replaying is part of the SSE specification and allows clients to reconnect to a stream without missing any data.
 
-📡&nbsp;&nbsp;Server-sent events via plain HTTP<br />
-💡&nbsp;&nbsp;Stream as a REST endpoint route<br />
-☁️&nbsp;&nbsp;Immutable state allows cleaner code<br />
-🗺️&nbsp;&nbsp;Framework-agnostic - works with Express, Koa & others<br />
-🛡️&nbsp;&nbsp;No more "Failed to upgrade websocket connection"<br />
+📡&nbsp;&nbsp;**Server-sent events via plain HTTP**<br />
+💡&nbsp;&nbsp;**Stream as a REST endpoint route**<br />
+☁️&nbsp;&nbsp;**Immutable state allows cleaner code**<br />
+🗺️&nbsp;&nbsp;**Framework-agnostic - works with Express, Koa & others**<br />
+🛡️&nbsp;&nbsp;**No more "Failed to upgrade websocket connection"**<br />
 
 ---
 
