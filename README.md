@@ -71,7 +71,7 @@ const events = require("./some-event-emitter")
 
 function streamSampleEvents (req, res) {
   const fetchEventsSince = async (lastEventId) => {
-    return [ /* all events since event with ID `lastEventId` woud go here */ ]
+    return [ /* all events since event with ID `lastEventId` would go here */ ]
   }
   return streamEvents(req, res, {
     async fetch (lastEventId) {
