@@ -18,6 +18,24 @@ export interface LowLevelStreamOptions {
   onClose?: (hadNetworkError: boolean) => void
 }
 
+/**
+ * Asserts a value is a string and returns it or throws TypeError if its not a 
+ * string.
+ * 
+ * @param {any} value to check for being a string
+ * @param {string} name to use in formatting the error message
+ * 
+ * @returns {string} the value if its a string
+ * @throws TypeError if the value is not a string
+ */
+function assertString(value: any, name: string = "value"): string {
+  const type = typeof value
+  if (type !== "string") {
+    throw new TypeError(`${name} must be a string but it is a ${type}`)
+  }
+  return value
+}
+
 export function createLowLevelStream (res: ServerResponse, options: LowLevelStreamOptions): LowLevelEventStream {
   if (res.headersSent) {
     throw new Error('Cannot create SSE event stream: Headers have already been sent to client.')
@@ -32,7 +50,7 @@ export function createLowLevelStream (res: ServerResponse, options: LowLevelStre
   const eventStream = {
     sendMessage (event: ServerSentEvent) {
       const lines: string[] = []
-      const data = Array.isArray(event.data) ? event.data : [event.data]
+      const data = Array.isArray(event.data) ? event.data : [assertString(event.data, "event.data")]
 
       if (stillInCommentBlock) {
         lines.push('')
@@ -48,11 +66,12 @@ export function createLowLevelStream (res: ServerResponse, options: LowLevelStre
         lines.push(`retry:${event.retry}`)
       }
 
-      for (const dataItem of data) {
+      data.forEach((dataItem, index) => {
+        assertString(dataItem, `event.data[${index}]`)
         for (const dataItemLine of dataItem.replace(/(\r\n|\r)/g, '\n').split('\n')) {
           lines.push(`data:${dataItemLine}`)
         }
-      }
+      })
 
       res.write(lines.join('\n') + '\n\n')
       stillInCommentBlock = false
